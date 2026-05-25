@@ -20,11 +20,19 @@ export default function PrivacyPolicy() {
             calcular indicadores, acompanhar pagamentos, prevenir abuso e cumprir obrigacoes legais.
             Cada usuario e responsavel pelos dados de clientes que registra no sistema.
           </p>
-          <p className="leading-7 text-[#424656]">
-            Usamos cookie essencial de autenticacao e token CSRF para manter a sessao segura. Nao
-            usamos cookies de marketing nesta versao. Dados financeiros e historicos de venda podem
-            ser mantidos quando houver obrigacao legal ou necessidade de defesa de direitos.
-          </p>
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold text-[#141b2b]">Cookies essenciais</h2>
+            <p className="leading-7 text-[#424656]">
+              Usamos os cookies essenciais auth_token e csrf_token para login, seguranca da sessao
+              e protecao contra requisicoes indevidas. Eles sao necessarios para o funcionamento da
+              conta autenticada.
+            </p>
+            <p className="leading-7 text-[#424656]">
+              Nao usamos cookies de marketing, rastreamento, analytics, pixels ou cookies de
+              terceiros nesta versao. Dados financeiros e historicos de venda podem ser mantidos
+              quando houver obrigacao legal ou necessidade de defesa de direitos.
+            </p>
+          </section>
           <p className="leading-7 text-[#424656]">
             Solicitacoes de acesso, correcao, exportacao ou exclusao podem ser enviadas pelo canal
             LGPD informado pelo responsavel do servico. Esta politica deve ser revisada juridicamente

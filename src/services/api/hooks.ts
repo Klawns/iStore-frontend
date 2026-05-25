@@ -12,7 +12,6 @@ import type {
   CustomerRequest,
   DeleteOwnAccountRequest,
   PaymentStatus,
-  PrivacyRequestPayload,
   SaleInstallmentStatus,
   SaleListParams,
   SaleRequest,
@@ -24,7 +23,6 @@ export const queryKeys = {
   sales: ['sales'] as const,
   installmentAlerts: ['sales', 'installments', 'alerts'] as const,
   analytics: (name: string, params?: AnalyticsParams) => ['analytics', name, params ?? {}] as const,
-  privacyRequests: ['privacy', 'requests'] as const,
 }
 
 export function useSignIn() {
@@ -259,22 +257,6 @@ export function useUpdateInstallmentStatus() {
       queryClient.invalidateQueries({ queryKey: queryKeys.sales })
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
     },
-  })
-}
-
-export function usePrivacyRequests() {
-  return useQuery({
-    queryKey: queryKeys.privacyRequests,
-    queryFn: privacy.listPrivacyRequests,
-  })
-}
-
-export function useCreatePrivacyRequest() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (payload: PrivacyRequestPayload) => privacy.createPrivacyRequest(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.privacyRequests }),
   })
 }
 

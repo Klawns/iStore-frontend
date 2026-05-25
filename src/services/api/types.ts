@@ -4,13 +4,13 @@ export type PaymentStatus = 'PENDING' | 'APPROVED' | 'CANCELED'
 
 export type SaleInstallmentStatus = 'PENDING' | 'PAID' | 'UNPAID'
 
-export type PrivacyRequestType = 'ACCESS' | 'CORRECTION' | 'EXPORT' | 'DELETION' | 'PORTABILITY'
-
-export type PrivacyRequestStatus = 'OPEN' | 'IN_REVIEW' | 'DONE' | 'REJECTED'
-
 export type UserResponse = {
   id: number
   email: string
+  privacyPolicyVersion: string
+  privacyAcceptedAt?: string
+  termsVersion: string
+  termsAcceptedAt?: string
 }
 
 export type AuthRequest = {
@@ -213,20 +213,6 @@ export type AnalyticsParams = {
   status?: PaymentStatus
   paymentType?: PaymentType
   groupBy?: 'daily' | 'monthly'
-}
-
-export type PrivacyRequestPayload = {
-  type: PrivacyRequestType
-  message: string
-}
-
-export type PrivacyRequestResponse = {
-  id: number
-  type: PrivacyRequestType
-  status: PrivacyRequestStatus
-  message: string
-  createdAt: string
-  updatedAt: string
 }
 
 export type PrivacyExportResponse = {

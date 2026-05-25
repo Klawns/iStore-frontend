@@ -158,16 +158,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <input
             name="acceptLegal"
             type="checkbox"
+            required
             className="mt-0.5 size-4 rounded border-[#c8d0e8] text-[#0050cb] focus:ring-[#0050cb]"
           />
           <span>
-            Li e aceito a{' '}
-            <Link to="/privacidade" className="font-semibold text-[#0050cb] hover:text-[#0044ad]">
-              Politica de Privacidade
-            </Link>{' '}
-            e os{' '}
+            Li e aceito os{' '}
             <Link to="/termos" className="font-semibold text-[#0050cb] hover:text-[#0044ad]">
               Termos de Uso
+            </Link>{' '}
+            e a{' '}
+            <Link to="/privacidade" className="font-semibold text-[#0050cb] hover:text-[#0044ad]">
+              Política de Privacidade
             </Link>
             .
           </span>
