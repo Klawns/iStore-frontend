@@ -1,5 +1,11 @@
 import { api } from './client'
-import type { CustomerListParams, CustomerListResponse, CustomerRequest, CustomerResponse } from './types'
+import type {
+  CustomerListParams,
+  CustomerListResponse,
+  CustomerRequest,
+  CustomerResponse,
+  DeleteCustomersResponse,
+} from './types'
 
 function cleanParams(params: CustomerListParams) {
   return Object.fromEntries(
@@ -31,4 +37,11 @@ export async function updateCustomer(id: number, payload: CustomerRequest) {
 
 export async function deleteCustomer(id: number) {
   await api.delete(`/customers/${id}`)
+}
+
+export async function deleteCustomers(ids: number[]) {
+  const { data } = await api.delete<DeleteCustomersResponse>('/customers/bulk', {
+    data: { ids },
+  })
+  return data
 }

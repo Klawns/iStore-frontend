@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { AuthRequest, CreateUserRequest, UserResponse } from './types'
+import type { AuthRequest, CreateUserRequest, DeleteOwnAccountRequest, UserResponse } from './types'
 
 function isUserResponse(value: unknown): value is UserResponse {
   return (
@@ -32,4 +32,8 @@ export async function getMe() {
   }
 
   return data
+}
+
+export async function deleteOwnAccount(payload: DeleteOwnAccountRequest) {
+  await api.delete('/users/me', { data: payload })
 }

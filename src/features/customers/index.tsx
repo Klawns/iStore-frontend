@@ -3,8 +3,10 @@ import {
   useCreateCustomer,
   useCustomers,
   useDeleteCustomer,
+  useDeleteCustomers,
   useUpdateCustomer,
 } from '../../services/api/hooks'
+import { ApiError } from '../../services/api/client'
 import type {
   CustomerListSummaryResponse,
   PaymentStatus,
@@ -147,7 +149,9 @@ function CustomersTable({
   isApiBacked,
   onDelete,
   onEdit,
+  onSelectionChange,
   page,
+  selectedIds,
   totalPages,
   onPreviousPage,
   onNextPage,
@@ -157,11 +161,41 @@ function CustomersTable({
   isApiBacked: boolean
   onDelete: (customer: CustomerRow) => void
   onEdit: (customer: CustomerRow) => void
+  onSelectionChange: (selectedIds: Set<number>) => void
   page: number
+  selectedIds: Set<number>
   totalPages: number
   onPreviousPage: () => void
   onNextPage: () => void
 }) {
+  const pageIds = customers.map((customer) => customer.id)
+  const selectablePageIds = isApiBacked ? pageIds : []
+  const selectedOnPage = selectablePageIds.filter((id) => selectedIds.has(id)).length
+  const isPageSelected = selectablePageIds.length > 0 && selectedOnPage === selectablePageIds.length
+  const isPagePartiallySelected = selectedOnPage > 0 && !isPageSelected
+
+  function togglePageSelection(checked: boolean) {
+    const next = new Set(selectedIds)
+    for (const id of selectablePageIds) {
+      if (checked) {
+        next.add(id)
+      } else {
+        next.delete(id)
+      }
+    }
+    onSelectionChange(next)
+  }
+
+  function toggleCustomerSelection(id: number, checked: boolean) {
+    const next = new Set(selectedIds)
+    if (checked) {
+      next.add(id)
+    } else {
+      next.delete(id)
+    }
+    onSelectionChange(next)
+  }
+
   return (
     <section className="rounded-xl border border-[#dfe4f5] bg-white shadow-[0_1px_3px_rgba(20,27,43,0.05)]">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#edf0fa] px-5 py-4">
@@ -177,6 +211,21 @@ function CustomersTable({
         <table className="w-full min-w-[860px] border-collapse text-left">
           <thead>
             <tr className="text-xs font-semibold uppercase tracking-[0.05em] text-[#727687]">
+              <th className="w-12 px-5 py-3">
+                <input
+                  type="checkbox"
+                  className="size-4 rounded border-[#c7cede] text-[#0050cb]"
+                  checked={isPageSelected}
+                  ref={(input) => {
+                    if (input) {
+                      input.indeterminate = isPagePartiallySelected
+                    }
+                  }}
+                  disabled={!isApiBacked || selectablePageIds.length === 0 || isActionPending}
+                  onChange={(event) => togglePageSelection(event.target.checked)}
+                  aria-label="Selecionar pagina"
+                />
+              </th>
               <th className="px-5 py-3">Cliente</th>
               <th className="px-5 py-3">Telefone</th>
               <th className="px-5 py-3">Faturamento</th>
@@ -188,6 +237,16 @@ function CustomersTable({
           <tbody>
             {customers.map((customer) => (
               <tr key={customer.id} className="border-t border-[#edf0fa] hover:bg-[#f9f9ff]">
+                <td className="px-5 py-4">
+                  <input
+                    type="checkbox"
+                    className="size-4 rounded border-[#c7cede] text-[#0050cb]"
+                    checked={selectedIds.has(customer.id)}
+                    disabled={!isApiBacked || isActionPending}
+                    onChange={(event) => toggleCustomerSelection(customer.id, event.target.checked)}
+                    aria-label={`Selecionar ${customer.name}`}
+                  />
+                </td>
                 <td className="px-5 py-4">
                   <div className="font-medium text-[#141b2b]">{customer.name}</div>
                 </td>
@@ -494,10 +553,63 @@ function CustomerDrawer({
   )
 }
 
+function BulkDeleteModal({
+  count,
+  isPending,
+  onClose,
+  onConfirm,
+}: {
+  count: number
+  isPending: boolean
+  onClose: () => void
+  onConfirm: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-[#141b2b]/45 px-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-lg border border-[#dfe4f5] bg-white p-5 shadow-xl">
+        <div className="flex items-start gap-3">
+          <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#fff7f7] text-[#ba1a1a]">
+            <span className="material-symbols-rounded text-[22px]" aria-hidden="true">
+              delete
+            </span>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-[#141b2b]">Excluir clientes selecionados</h2>
+            <p className="mt-2 text-sm leading-6 text-[#424656]">
+              {count} cliente{count === 1 ? '' : 's'} sera{count === 1 ? '' : 'o'} excluido
+              {count === 1 ? '' : 's'}. Clientes com historico de vendas bloqueiam a operacao.
+            </p>
+          </div>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            className="h-10 rounded-lg border border-[#dfe4f5] bg-white px-3 text-sm font-medium text-[#424656] hover:bg-[#f9f9ff]"
+            onClick={onClose}
+            disabled={isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="h-10 rounded-lg bg-[#ba1a1a] px-3 text-sm font-medium text-white hover:bg-[#8f1111] disabled:cursor-not-allowed disabled:bg-[#c9cdd8]"
+            onClick={onConfirm}
+            disabled={isPending}
+          >
+            {isPending ? 'Excluindo...' : 'Excluir'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Customers() {
   const [draft, setDraft] = useState<CustomerFormDraft | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(1)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set())
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
   const [filterDraft, setFilterDraft] = useState<CustomerFilterState>(emptyFilters)
   const [appliedFilters, setAppliedFilters] = useState<CustomerFilterState>(emptyFilters)
   const customerParams = useMemo(
@@ -516,6 +628,7 @@ export default function Customers() {
   const createCustomer = useCreateCustomer()
   const updateCustomer = useUpdateCustomer()
   const deleteCustomer = useDeleteCustomer()
+  const deleteCustomers = useDeleteCustomers()
   const isApiBacked = Boolean(customersQuery.data)
   const customers: CustomerRow[] = useMemo(() => {
     if (!customersQuery.data) {
@@ -536,6 +649,7 @@ export default function Customers() {
     [customers, customersQuery.data?.summary],
   )
   const totalPages = customersQuery.data?.totalPages ?? (customersQuery.data ? 0 : 1)
+  const currentPage = totalPages > 0 ? Math.min(page, totalPages) : 0
 
   function saveDraft() {
     if (!draft) {
@@ -564,19 +678,36 @@ export default function Customers() {
   }
 
   function removeCustomer(customer: CustomerRow) {
-    deleteCustomer.mutate(customer.id)
+    deleteCustomer.mutate(customer.id, {
+      onSuccess: () => {
+        setSelectedIds((current) => {
+          const next = new Set(current)
+          next.delete(customer.id)
+          return next
+        })
+      },
+    })
+  }
+
+  function confirmDeleteSelected() {
+    const ids = Array.from(selectedIds)
+    deleteCustomers.mutate(ids, {
+      onSuccess: () => {
+        setSelectedIds(new Set())
+        setConfirmBulkDelete(false)
+      },
+    })
   }
 
   const isActionPending =
-    createCustomer.isPending || updateCustomer.isPending || deleteCustomer.isPending
-
-  useEffect(() => {
-    const pages = customersQuery.data?.totalPages ?? 0
-
-    if (pages > 0 && page > pages) {
-      setPage(pages)
-    }
-  }, [customersQuery.data?.totalPages, page])
+    createCustomer.isPending ||
+    updateCustomer.isPending ||
+    deleteCustomer.isPending ||
+    deleteCustomers.isPending
+  const bulkDeleteError =
+    deleteCustomers.error instanceof ApiError
+      ? deleteCustomers.error.message
+      : 'Nao foi possivel excluir os clientes selecionados.'
 
   function applyFilters() {
     setAppliedFilters(filterDraft)
@@ -629,9 +760,10 @@ export default function Customers() {
       {customersQuery.isError ||
       createCustomer.isError ||
       updateCustomer.isError ||
-      deleteCustomer.isError ? (
+      deleteCustomer.isError ||
+      deleteCustomers.isError ? (
         <div className="rounded-lg border border-[#fde1e1] bg-[#fff7f7] px-4 py-3 text-sm font-medium text-[#8f1111]">
-          Nao foi possivel atualizar clientes.
+          {deleteCustomers.isError ? bulkDeleteError : 'Nao foi possivel atualizar clientes.'}
         </div>
       ) : null}
 
@@ -656,16 +788,37 @@ export default function Customers() {
         ))}
       </section>
 
+      {selectedIds.size > 0 ? (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#dfe4f5] bg-white px-4 py-3 shadow-sm">
+          <p className="text-sm font-medium text-[#424656]">
+            {selectedIds.size} selecionado{selectedIds.size === 1 ? '' : 's'}
+          </p>
+          <button
+            type="button"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#ba1a1a] px-3 text-sm font-medium text-white hover:bg-[#8f1111] disabled:cursor-not-allowed disabled:bg-[#c9cdd8]"
+            onClick={() => setConfirmBulkDelete(true)}
+            disabled={!isApiBacked || isActionPending}
+          >
+            <span className="material-symbols-rounded text-[19px]" aria-hidden="true">
+              delete
+            </span>
+            Excluir selecionados
+          </button>
+        </section>
+      ) : null}
+
       <CustomersTable
         customers={customers}
         isActionPending={isActionPending}
         isApiBacked={isApiBacked}
         onDelete={removeCustomer}
         onEdit={editCustomer}
-        page={page}
+        onSelectionChange={setSelectedIds}
+        page={currentPage}
+        selectedIds={selectedIds}
         totalPages={totalPages}
         onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}
-        onNextPage={() => setPage((current) => current + 1)}
+        onNextPage={() => setPage((current) => Math.min(totalPages || 1, current + 1))}
       />
 
       {draft ? (
@@ -674,6 +827,15 @@ export default function Customers() {
           onClose={() => setDraft(null)}
           onSave={saveDraft}
           onUpdate={setDraft}
+        />
+      ) : null}
+
+      {confirmBulkDelete ? (
+        <BulkDeleteModal
+          count={selectedIds.size}
+          isPending={deleteCustomers.isPending}
+          onClose={() => setConfirmBulkDelete(false)}
+          onConfirm={confirmDeleteSelected}
         />
       ) : null}
     </div>

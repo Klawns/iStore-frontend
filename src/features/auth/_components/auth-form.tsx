@@ -12,6 +12,8 @@ type AuthFormProps = {
 
 type FieldErrors = Partial<Record<'email' | 'password', string>>
 
+const LEGAL_VERSION = '2026-05-25'
+
 const authSchema = z.object({
   email: z.string().trim().min(1, 'Informe seu email.').email('Informe um email valido.'),
   password: z.string().min(1, 'Informe sua senha.').min(6, 'Use pelo menos 6 caracteres.'),
@@ -65,9 +67,21 @@ export default function AuthForm({ mode }: AuthFormProps) {
       return
     }
 
+    const acceptedLegal = formData.get('acceptLegal') === 'on'
+    if (isRegister && !acceptedLegal) {
+      setFormError('Aceite a Politica de Privacidade e os Termos de Uso para criar sua conta.')
+      return
+    }
+
     try {
       if (isRegister) {
-        await createUser.mutateAsync(parsed.data)
+        await createUser.mutateAsync({
+          ...parsed.data,
+          acceptPrivacyPolicy: true,
+          acceptTerms: true,
+          privacyPolicyVersion: LEGAL_VERSION,
+          termsVersion: LEGAL_VERSION,
+        })
       }
 
       await signIn.mutateAsync(parsed.data)
@@ -139,6 +153,27 @@ export default function AuthForm({ mode }: AuthFormProps) {
         </div>
       ) : null}
 
+      {isRegister ? (
+        <label className="flex items-start gap-3 rounded-lg border border-[#dfe4f5] bg-[#fbfcff] p-3 text-sm text-[#424656]">
+          <input
+            name="acceptLegal"
+            type="checkbox"
+            className="mt-0.5 size-4 rounded border-[#c8d0e8] text-[#0050cb] focus:ring-[#0050cb]"
+          />
+          <span>
+            Li e aceito a{' '}
+            <Link to="/privacidade" className="font-semibold text-[#0050cb] hover:text-[#0044ad]">
+              Politica de Privacidade
+            </Link>{' '}
+            e os{' '}
+            <Link to="/termos" className="font-semibold text-[#0050cb] hover:text-[#0044ad]">
+              Termos de Uso
+            </Link>
+            .
+          </span>
+        </label>
+      ) : null}
+
       <button
         type="submit"
         disabled={isSubmitting}
@@ -158,6 +193,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
         >
           {isRegister ? 'Entrar' : 'Criar conta'}
         </Link>
+      </p>
+
+      <p className="text-center text-xs leading-5 text-[#727687]">
+        Usamos um cookie essencial de autenticacao para manter sua sessao segura.{' '}
+        <Link to="/privacidade" className="font-semibold text-[#0050cb] hover:text-[#0044ad]">
+          Privacidade
+        </Link>{' '}
+        e{' '}
+        <Link to="/termos" className="font-semibold text-[#0050cb] hover:text-[#0044ad]">
+          Termos
+        </Link>
+        .
       </p>
     </form>
   )

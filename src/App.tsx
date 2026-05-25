@@ -5,6 +5,9 @@ import Auth from './features/auth'
 import Customers from './features/customers'
 import Dashboard from './features/dashboard'
 import Finance from './features/finance'
+import PrivacyPolicy from './features/legal/privacy'
+import TermsOfUse from './features/legal/terms'
+import Privacy from './features/privacy'
 import Sales from './features/sales'
 import { useMe } from './services/api/hooks'
 
@@ -83,6 +86,8 @@ function App() {
           </PublicOnlyRoute>
         }
       />
+      <Route path="/privacidade" element={<PrivacyPolicy />} />
+      <Route path="/termos" element={<TermsOfUse />} />
       <Route
         path="/dashboard"
         element={
@@ -119,6 +124,16 @@ function App() {
           <ProtectedRoute>
             <AppShell>
               <Finance />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lgpd"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <Privacy />
             </AppShell>
           </ProtectedRoute>
         }

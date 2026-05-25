@@ -24,6 +24,25 @@ export const api = axios.create({
   withCredentials: true,
 })
 
+function readCookie(name: string) {
+  return document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(`${name}=`))
+    ?.split('=')[1]
+}
+
+api.interceptors.request.use((config) => {
+  const method = config.method?.toUpperCase()
+  if (method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    const csrfToken = readCookie('csrf_token')
+    if (csrfToken) {
+      config.headers.set('X-CSRF-Token', decodeURIComponent(csrfToken))
+    }
+  }
+
+  return config
+})
+
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<RestErr>) => {

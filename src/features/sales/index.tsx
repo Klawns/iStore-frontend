@@ -901,6 +901,9 @@ function SaleDrawer({
                         onChange={(event) => updateItem(item.id, { specs: event.target.value })}
                         disabled={isSaving}
                       />
+                      <span className="mt-1 block text-xs leading-5 text-[#727687]">
+                        Evite CPF, dados sensiveis ou informacoes pessoais desnecessarias.
+                      </span>
                     </label>
                     <div className="grid gap-3 sm:grid-cols-3">
                       <label className="block">
@@ -1071,14 +1074,8 @@ export default function Sales() {
     ? getErrorMessage(createSale.error, 'Nao foi possivel criar a venda.')
     : undefined
   const isActionPending = createSale.isPending || updateStatus.isPending || deleteSale.isPending
-
-  useEffect(() => {
-    const totalPages = salesQuery.data?.totalPages ?? 0
-
-    if (totalPages > 0 && page > totalPages) {
-      setPage(totalPages)
-    }
-  }, [page, salesQuery.data?.totalPages])
+  const totalPages = salesQuery.data?.totalPages ?? 0
+  const currentPage = totalPages > 0 ? Math.min(page, totalPages) : 1
 
   function openNewSale() {
     const firstCustomer = customerOptions[0]
@@ -1234,10 +1231,12 @@ export default function Sales() {
               />
               <SalesPagination
                 isLoading={salesQuery.isFetching}
-                page={salesQuery.data?.page ?? page}
+                page={currentPage}
                 totalItems={salesQuery.data?.totalItems ?? 0}
-                totalPages={salesQuery.data?.totalPages ?? 0}
-                onPageChange={setPage}
+                totalPages={totalPages}
+                onPageChange={(nextPage) =>
+                  setPage(Math.min(Math.max(1, nextPage), Math.max(totalPages, 1)))
+                }
               />
             </div>
           ) : (

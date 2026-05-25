@@ -10,6 +10,7 @@ const navItems: NavItem[] = [
   { id: 'sales', label: 'Vendas', icon: 'shopping_bag', to: '/vendas' },
   { id: 'customers', label: 'Clientes', icon: 'groups', to: '/clientes' },
   { id: 'finance', label: 'Financeiro', icon: 'account_balance_wallet', to: '/financeiro' },
+  { id: 'privacy', label: 'Privacidade', icon: 'shield_lock', to: '/lgpd' },
 ]
 
 export default function AppShell({ children }: AppShellProps) {

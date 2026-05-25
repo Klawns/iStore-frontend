@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as analytics from './analytics'
 import * as auth from './auth'
 import * as customers from './customers'
+import * as privacy from './privacy'
 import * as sales from './sales'
 import type {
   AnalyticsParams,
@@ -9,7 +10,9 @@ import type {
   AuthRequest,
   CreateUserRequest,
   CustomerRequest,
+  DeleteOwnAccountRequest,
   PaymentStatus,
+  PrivacyRequestPayload,
   SaleInstallmentStatus,
   SaleListParams,
   SaleRequest,
@@ -21,6 +24,7 @@ export const queryKeys = {
   sales: ['sales'] as const,
   installmentAlerts: ['sales', 'installments', 'alerts'] as const,
   analytics: (name: string, params?: AnalyticsParams) => ['analytics', name, params ?? {}] as const,
+  privacyRequests: ['privacy', 'requests'] as const,
 }
 
 export function useSignIn() {
@@ -39,6 +43,15 @@ export function useSignOut() {
 
   return useMutation({
     mutationFn: auth.signOut,
+    onSettled: () => queryClient.clear(),
+  })
+}
+
+export function useDeleteOwnAccount() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: DeleteOwnAccountRequest) => auth.deleteOwnAccount(payload),
     onSettled: () => queryClient.clear(),
   })
 }
@@ -152,6 +165,18 @@ export function useDeleteCustomer() {
   })
 }
 
+export function useDeleteCustomers() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (ids: number[]) => customers.deleteCustomers(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
+    },
+  })
+}
+
 export function useSales(params: SaleListParams = {}) {
   return useQuery({ queryKey: [...queryKeys.sales, params], queryFn: () => sales.listSales(params) })
 }
@@ -235,4 +260,24 @@ export function useUpdateInstallmentStatus() {
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
     },
   })
+}
+
+export function usePrivacyRequests() {
+  return useQuery({
+    queryKey: queryKeys.privacyRequests,
+    queryFn: privacy.listPrivacyRequests,
+  })
+}
+
+export function useCreatePrivacyRequest() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: PrivacyRequestPayload) => privacy.createPrivacyRequest(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.privacyRequests }),
+  })
+}
+
+export function usePrivacyExport() {
+  return useMutation({ mutationFn: privacy.exportPrivacyData })
 }

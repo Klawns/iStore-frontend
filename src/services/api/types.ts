@@ -4,6 +4,10 @@ export type PaymentStatus = 'PENDING' | 'APPROVED' | 'CANCELED'
 
 export type SaleInstallmentStatus = 'PENDING' | 'PAID' | 'UNPAID'
 
+export type PrivacyRequestType = 'ACCESS' | 'CORRECTION' | 'EXPORT' | 'DELETION' | 'PORTABILITY'
+
+export type PrivacyRequestStatus = 'OPEN' | 'IN_REVIEW' | 'DONE' | 'REJECTED'
+
 export type UserResponse = {
   id: number
   email: string
@@ -14,7 +18,16 @@ export type AuthRequest = {
   password: string
 }
 
-export type CreateUserRequest = AuthRequest
+export type DeleteOwnAccountRequest = {
+  password: string
+}
+
+export type CreateUserRequest = AuthRequest & {
+  acceptPrivacyPolicy: boolean
+  acceptTerms: boolean
+  privacyPolicyVersion: string
+  termsVersion: string
+}
 
 export type CustomerResponse = {
   id: number
@@ -23,6 +36,10 @@ export type CustomerResponse = {
 }
 
 export type CustomerRequest = Omit<CustomerResponse, 'id'>
+
+export type DeleteCustomersResponse = {
+  deleted: number
+}
 
 export type CustomerListItemResponse = CustomerResponse & {
   salesCount: number
@@ -196,4 +213,36 @@ export type AnalyticsParams = {
   status?: PaymentStatus
   paymentType?: PaymentType
   groupBy?: 'daily' | 'monthly'
+}
+
+export type PrivacyRequestPayload = {
+  type: PrivacyRequestType
+  message: string
+}
+
+export type PrivacyRequestResponse = {
+  id: number
+  type: PrivacyRequestType
+  status: PrivacyRequestStatus
+  message: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type PrivacyExportResponse = {
+  exportedAt: string
+  account: {
+    id: number
+    email: string
+    createdAt: string
+    updatedAt: string
+  }
+  consents: {
+    privacyPolicyVersion: string
+    privacyAcceptedAt?: string
+    termsVersion: string
+    termsAcceptedAt?: string
+  }
+  customers: unknown[]
+  sales: unknown[]
 }
