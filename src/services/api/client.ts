@@ -22,6 +22,7 @@ export class ApiError extends Error {
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
   withCredentials: true,
+  timeout: 15_000,
 })
 
 function readCookie(name: string) {
@@ -46,6 +47,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<RestErr>) => {
+    if (error.code === 'ECONNABORTED') {
+      return Promise.reject(new ApiError({ code: 408, message: 'Tempo limite ao conectar com a API.' }))
+    }
+
     if (error.response?.data) {
       return Promise.reject(new ApiError(error.response.data))
     }
