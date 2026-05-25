@@ -45,10 +45,6 @@ function ProtectedRoute({ children }: RouteGuardProps) {
 function PublicOnlyRoute({ children }: RouteGuardProps) {
   const me = useMe()
 
-  if (me.isLoading) {
-    return <LoadingScreen />
-  }
-
   if (me.isSuccess) {
     return <Navigate to="/dashboard" replace />
   }
