@@ -11,7 +11,7 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:stable-alpine
 
 ENV PORT=8080
-ENV API_UPSTREAM=http://backend.railway.internal:8080
+ENV API_UPSTREAM=http://istore-backend.railway.internal:8080
 ENV DOLLAR=$
 
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
