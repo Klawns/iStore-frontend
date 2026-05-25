@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSignOut } from '../services/api/hooks'
 
 export type NavItem = {
@@ -16,11 +17,13 @@ type AppSidebarProps = {
 
 export default function AppSidebar({ items, onNavigate }: AppSidebarProps) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const signOut = useSignOut()
 
   function handleSignOut() {
     signOut.mutate(undefined, {
-      onSuccess: () => {
+      onSettled: () => {
+        queryClient.clear()
         onNavigate?.()
         navigate('/login', { replace: true })
       },

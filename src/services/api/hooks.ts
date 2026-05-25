@@ -37,12 +37,7 @@ export function useSignIn() {
 }
 
 export function useSignOut() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: auth.signOut,
-    onSettled: () => queryClient.clear(),
-  })
+  return useMutation({ mutationFn: auth.signOut })
 }
 
 export function useDeleteOwnAccount() {
