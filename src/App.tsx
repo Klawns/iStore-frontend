@@ -7,7 +7,7 @@ import Dashboard from './features/dashboard'
 import Finance from './features/finance'
 import PrivacyPolicy from './features/legal/privacy'
 import TermsOfUse from './features/legal/terms'
-import Privacy from './features/privacy'
+import Settings from './features/settings'
 import Sales from './features/sales'
 import { useMe } from './services/api/hooks'
 
@@ -129,11 +129,11 @@ function App() {
         }
       />
       <Route
-        path="/lgpd"
+        path="/configuracoes"
         element={
           <ProtectedRoute>
             <AppShell>
-              <Privacy />
+              <Settings />
             </AppShell>
           </ProtectedRoute>
         }

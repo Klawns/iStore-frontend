@@ -214,21 +214,3 @@ export type AnalyticsParams = {
   paymentType?: PaymentType
   groupBy?: 'daily' | 'monthly'
 }
-
-export type PrivacyExportResponse = {
-  exportedAt: string
-  account: {
-    id: number
-    email: string
-    createdAt: string
-    updatedAt: string
-  }
-  consents: {
-    privacyPolicyVersion: string
-    privacyAcceptedAt?: string
-    termsVersion: string
-    termsAcceptedAt?: string
-  }
-  customers: unknown[]
-  sales: unknown[]
-}

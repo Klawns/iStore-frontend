@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as analytics from './analytics'
 import * as auth from './auth'
 import * as customers from './customers'
-import * as privacy from './privacy'
 import * as sales from './sales'
 import type {
   AnalyticsParams,
@@ -253,8 +252,4 @@ export function useUpdateInstallmentStatus() {
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
     },
   })
-}
-
-export function usePrivacyExport() {
-  return useMutation({ mutationFn: privacy.exportPrivacyData })
 }
