@@ -1,8 +1,18 @@
 import { api } from './client'
 import type { AuthRequest, CreateUserRequest, UserResponse } from './types'
 
+function isUserResponse(value: unknown): value is UserResponse {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as UserResponse).id === 'number' &&
+    typeof (value as UserResponse).email === 'string'
+  )
+}
+
 export async function signIn(payload: AuthRequest) {
   await api.post('/auth/sign-in', payload)
+  return getMe()
 }
 
 export async function signOut() {
@@ -16,6 +26,10 @@ export async function createUser(payload: CreateUserRequest) {
 
 export async function getMe() {
   const { data } = await api.get<UserResponse>('/users/me')
+
+  if (!isUserResponse(data)) {
+    throw new Error('Sessao invalida.')
+  }
+
   return data
 }
-

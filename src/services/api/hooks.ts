@@ -28,7 +28,9 @@ export function useSignIn() {
 
   return useMutation({
     mutationFn: (payload: AuthRequest) => auth.signIn(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.me }),
+    onSuccess: (user) => {
+      queryClient.setQueryData(queryKeys.me, user)
+    },
   })
 }
 
@@ -37,7 +39,7 @@ export function useSignOut() {
 
   return useMutation({
     mutationFn: auth.signOut,
-    onSuccess: () => queryClient.clear(),
+    onSettled: () => queryClient.clear(),
   })
 }
 
