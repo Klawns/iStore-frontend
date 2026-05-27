@@ -1,4 +1,4 @@
-import type { MetricCardData } from '../mock'
+import type { MetricCardData } from '../types'
 
 const toneClasses: Record<MetricCardData['tone'], string> = {
   blue: 'bg-[#eaf1ff] text-[#0050cb]',

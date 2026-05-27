@@ -2,8 +2,7 @@ import MetricCard from './_components/metric-card'
 import OrderStatusCard from './_components/order-status-card'
 import TopProductsTable from './_components/top-products-table'
 import { useDashboard, useStatuses, useTopProducts } from '../../services/api/hooks'
-import { metrics as fallbackMetrics, orderStatuses as fallbackStatuses, topProducts as fallbackProducts } from './mock'
-import type { MetricCardData, OrderStatus, ProductRow } from './mock'
+import type { MetricCardData, OrderStatus, ProductRow } from './types'
 
 const statusLabels = {
   APPROVED: 'Concluidos',
@@ -33,9 +32,12 @@ export default function Dashboard() {
   const dashboard = useDashboard()
   const topProductsQuery = useTopProducts({ limit: 5 })
   const statusesQuery = useStatuses()
+  const hasError = dashboard.isError || topProductsQuery.isError || statusesQuery.isError
+  const isLoading = dashboard.isLoading || topProductsQuery.isLoading || statusesQuery.isLoading
 
-  const metrics: MetricCardData[] = dashboard.data
-    ? [
+  const metrics: MetricCardData[] =
+    dashboard.data && !hasError
+      ? [
         {
           label: 'Faturamento Total',
           value: currency(dashboard.data.revenue),
@@ -64,29 +66,33 @@ export default function Dashboard() {
           tone: 'amber',
         },
       ]
-    : fallbackMetrics
+      : []
 
   const topProducts: ProductRow[] =
-    topProductsQuery.data?.map((product) => ({
+    !hasError && topProductsQuery.data
+      ? topProductsQuery.data.map((product) => ({
       name: product.productName,
       sku: `${product.salesCount} vendas`,
       quantity: `${numberLabel(product.quantity)} un.`,
       revenue: currency(product.revenue),
       trend: currency(product.profit),
       icon: 'smartphone',
-    })) ?? fallbackProducts
+        }))
+      : []
 
   const totalStatuses =
-    statusesQuery.data?.reduce((sum, status) => sum + status.salesCount, 0) ?? 0
+    !hasError && statusesQuery.data
+      ? statusesQuery.data.reduce((sum, status) => sum + status.salesCount, 0)
+      : 0
   const orderStatuses: OrderStatus[] =
-    statusesQuery.data?.map((status) => ({
+    !hasError && statusesQuery.data
+      ? statusesQuery.data.map((status) => ({
       label: statusLabels[status.status],
       count: numberLabel(status.salesCount),
       percent: totalStatuses > 0 ? Math.round((status.salesCount / totalStatuses) * 100) : 0,
       tone: statusTones[status.status],
-    })) ?? fallbackStatuses
-  const hasError = dashboard.isError || topProductsQuery.isError || statusesQuery.isError
-
+        }))
+      : []
   return (
     <div className="space-y-6">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -128,22 +134,26 @@ export default function Dashboard() {
         </div>
       ) : null}
 
-      {dashboard.isLoading || topProductsQuery.isLoading || statusesQuery.isLoading ? (
+      {isLoading ? (
         <div className="rounded-lg border border-[#dfe4f5] bg-white px-4 py-3 text-sm font-medium text-[#424656]">
           Carregando dados...
         </div>
       ) : null}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric) => (
-          <MetricCard key={metric.label} metric={metric} />
-        ))}
-      </section>
+      {!hasError && !isLoading ? (
+        <>
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {metrics.map((metric) => (
+              <MetricCard key={metric.label} metric={metric} />
+            ))}
+          </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <TopProductsTable products={topProducts} />
-        <OrderStatusCard statuses={orderStatuses} />
-      </section>
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <TopProductsTable products={topProducts} />
+            <OrderStatusCard statuses={orderStatuses} />
+          </section>
+        </>
+      ) : null}
     </div>
   )
 }

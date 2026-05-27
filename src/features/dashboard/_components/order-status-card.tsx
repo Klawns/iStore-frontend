@@ -1,4 +1,4 @@
-import type { OrderStatus } from '../mock'
+import type { OrderStatus } from '../types'
 
 const toneClasses: Record<OrderStatus['tone'], string> = {
   green: 'bg-[#12a150]',

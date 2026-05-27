@@ -12,12 +12,7 @@ import type {
   PaymentStatus,
   PaymentType,
 } from '../../services/api/types'
-import {
-  initialCustomers,
-  type CustomerFormDraft,
-  type CustomerMetricData,
-  type CustomerRow,
-} from './mock'
+import type { CustomerFormDraft, CustomerMetricData, CustomerRow } from './types'
 
 const metricToneClasses: Record<CustomerMetricData['tone'], string> = {
   blue: 'bg-[#eaf1ff] text-[#0050cb]',
@@ -84,18 +79,10 @@ function phoneLabel(phone: string) {
   return phone
 }
 
-function buildMetrics(summary?: CustomerListSummaryResponse, fallbackCustomers?: CustomerRow[]): CustomerMetricData[] {
-  const totalCustomers = summary?.totalCustomers ?? fallbackCustomers?.length ?? 0
-  const totalSales =
-    summary?.salesCount ?? fallbackCustomers?.reduce((sum, customer) => sum + customer.salesCount, 0) ?? 0
-  const totalRevenue =
-    summary?.revenue ?? fallbackCustomers?.reduce((sum, customer) => sum + customer.revenueInCents, 0) ?? 0
-  const averageTicketInCents = summary?.averageTicket ?? (totalSales > 0 ? Math.round(totalRevenue / totalSales) : 0)
-  const repeatRate =
-    summary?.repeatRate ??
-    (fallbackCustomers && totalCustomers > 0
-      ? Math.round((fallbackCustomers.filter((customer) => customer.salesCount > 1).length / totalCustomers) * 100)
-      : 0)
+function buildMetrics(summary?: CustomerListSummaryResponse): CustomerMetricData[] {
+  const totalCustomers = summary?.totalCustomers ?? 0
+  const averageTicketInCents = summary?.averageTicket ?? 0
+  const repeatRate = summary?.repeatRate ?? 0
 
   return [
     {
@@ -632,7 +619,7 @@ export default function Customers() {
   const isApiBacked = Boolean(customersQuery.data)
   const customers: CustomerRow[] = useMemo(() => {
     if (!customersQuery.data) {
-      return initialCustomers
+      return []
     }
 
     return customersQuery.data.items.map((customer) => ({
@@ -644,12 +631,10 @@ export default function Customers() {
       profitInCents: customer.profit,
     }))
   }, [customersQuery.data])
-  const metrics = useMemo(
-    () => buildMetrics(customersQuery.data?.summary, customers),
-    [customers, customersQuery.data?.summary],
-  )
-  const totalPages = customersQuery.data?.totalPages ?? (customersQuery.data ? 0 : 1)
+  const metrics = useMemo(() => buildMetrics(customersQuery.data?.summary), [customersQuery.data?.summary])
+  const totalPages = customersQuery.data?.totalPages ?? 0
   const currentPage = totalPages > 0 ? Math.min(page, totalPages) : 0
+  const isCustomersQueryBlocked = customersQuery.isError
 
   function saveDraft() {
     if (!draft) {
@@ -782,11 +767,13 @@ export default function Customers() {
         />
       ) : null}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {metrics.map((metric) => (
-          <CustomerMetricCard key={metric.label} metric={metric} />
-        ))}
-      </section>
+      {!isCustomersQueryBlocked ? (
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {metrics.map((metric) => (
+            <CustomerMetricCard key={metric.label} metric={metric} />
+          ))}
+        </section>
+      ) : null}
 
       {selectedIds.size > 0 ? (
         <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#dfe4f5] bg-white px-4 py-3 shadow-sm">
@@ -807,19 +794,21 @@ export default function Customers() {
         </section>
       ) : null}
 
-      <CustomersTable
-        customers={customers}
-        isActionPending={isActionPending}
-        isApiBacked={isApiBacked}
-        onDelete={removeCustomer}
-        onEdit={editCustomer}
-        onSelectionChange={setSelectedIds}
-        page={currentPage}
-        selectedIds={selectedIds}
-        totalPages={totalPages}
-        onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}
-        onNextPage={() => setPage((current) => Math.min(totalPages || 1, current + 1))}
-      />
+      {!isCustomersQueryBlocked ? (
+        <CustomersTable
+          customers={customers}
+          isActionPending={isActionPending}
+          isApiBacked={isApiBacked}
+          onDelete={removeCustomer}
+          onEdit={editCustomer}
+          onSelectionChange={setSelectedIds}
+          page={currentPage}
+          selectedIds={selectedIds}
+          totalPages={totalPages}
+          onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}
+          onNextPage={() => setPage((current) => Math.min(totalPages || 1, current + 1))}
+        />
+      ) : null}
 
       {draft ? (
         <CustomerDrawer

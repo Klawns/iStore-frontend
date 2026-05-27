@@ -1,4 +1,4 @@
-import type { ProductRow } from '../mock'
+import type { ProductRow } from '../types'
 
 type TopProductsTableProps = {
   products: ProductRow[]
